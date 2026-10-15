@@ -1,0 +1,365 @@
+/* ===== 색과 서체: 여기만 바꾸면 전체가 바뀜 ===== */
+:root {
+  --paper: #EEF0F2;   /* 배경 */
+  --ink:   #111315;   /* 글자 */
+  --muted: #5C6168;   /* 보조 글자 */
+  --rule:  #C9CDD2;   /* 구분선 */
+  --wall:  #D9DCE0;   /* 카드 사이 바탕 */
+  --slab:  #B4B9BF;   /* 블록 색 (글을 가리는 동안) */
+  --slab-hover: #A5ABB2;
+
+  --display: "Archivo", "Arial Narrow", Arial, sans-serif;               /* 큰 제목 */
+  --body:    "Newsreader", Georgia, "Times New Roman", serif;            /* 기사 본문 */
+  --mono:    "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;  /* 라벨, UI */
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  overflow-x: hidden;
+}
+button { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+
+/* 공통: 글 칸, 작은 라벨, 출처 */
+.col {
+  position: relative;          /* 블록, 렌즈 위치의 기준 */
+  max-width: 640px;
+  margin: 0 auto;
+}
+.kicker {
+  margin: 0 0 16px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.source {
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.source a { color: var(--ink); }
+
+/* ===== 1. 첫 화면 ===== */
+#gate {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 24px;
+  padding: clamp(16px, 4vw, 40px);
+  border: 0;
+  background: var(--paper);
+  text-align: left;
+  cursor: pointer;
+}
+#gate:focus-visible { outline: 3px solid var(--ink); outline-offset: -10px; }
+
+.gate-top, .gate-bottom {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.gate-word {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 900;
+  font-stretch: 72%;
+  font-size: clamp(72px, 19vw, 260px);
+  line-height: .82;
+  letter-spacing: -.02em;
+  text-transform: uppercase;
+}
+.gate-sub {
+  margin-top: 20px;
+  max-width: 34ch;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ===== 홈: 카드 넘기기 =====
+   홈은 화면에 고정된 창. 카드(첫 화면, 기사, About)가 세로로 쌓인 track을 통째로 움직임.
+   조금 스크롤하면 버티다가 제자리로, 화면의 60% 이상 넘기면 다음 카드로 넘어감 (script.js PART 3) */
+html.paged, html.paged body { height: 100%; overflow: hidden; }
+#home {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--paper);
+}
+.track {
+  display: flex;
+  flex-direction: column;
+  will-change: transform;
+}
+.track.snapping { transition: transform .65s cubic-bezier(.2, 1.15, .35, 1); }
+.card {
+  flex: 0 0 auto;
+  height: 100vh;
+  height: 100dvh;
+  background: var(--paper);
+}
+.section.card {
+  overflow-y: auto;               /* 긴 기사는 카드 안에서 스크롤 */
+  overscroll-behavior: contain;
+  padding: 80px 16px 96px;
+}
+
+/* ===== 2. 만지는 기사: 유리 진열장 ===== */
+.ta-kicker {
+  margin: 0 0 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.ta-title {
+  margin: 0 0 14px;
+  font-family: var(--display);
+  font-weight: 800;
+  font-stretch: 80%;
+  font-size: clamp(34px, 6vw, 52px);
+  line-height: 1;
+  letter-spacing: -.01em;
+  text-wrap: balance;
+}
+.ta-byline {
+  margin: 0 0 36px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .06em;
+  color: var(--muted);
+}
+#touch-body p { margin: 0 0 22px; font-size: 19px; line-height: 1.6; }
+
+/* 점자 단어: 점자와 글자를 같은 칸에 겹쳐 두고, 손이 닿으면 글자만 보이게 (줄바꿈이 흔들리지 않음) */
+.touch-article { touch-action: pan-y; }      /* 폰: 위아래는 스크롤, 좌우로 쓸면 읽힘 */
+.w {
+  display: inline-grid;
+  vertical-align: baseline;
+  cursor: default;
+}
+.w > span { grid-area: 1 / 1; transition: opacity .35s ease; }
+.w .b {
+  font-family: "Noto Sans Symbols 2", "Apple Braille", "Segoe UI Symbol", "DejaVu Sans", sans-serif;
+  color: var(--ink);
+  letter-spacing: .06em;
+}
+.w .l { opacity: 0; }
+.w.on .b { opacity: 0; }
+.w.on .l { opacity: 1; }
+
+/* 점자로 가려진 이미지: 사진 위를 종이색 판이 덮고, 그 위에 본문처럼 검은 점자 점이 찍힘.
+   만진 칸은 판이 사라져 사진이 보였다가 다시 덮임 */
+.ta-fig { margin: 40px 0 36px; }
+.ta-fig .frame { position: relative; line-height: 0; }
+.ta-fig img { width: 100%; height: auto; display: block; }
+.ta-fig canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: default;
+}
+.ta-fig figcaption {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+
+/* ===== 울타리 기사 화면 ===== */
+#reader { padding: 0 16px 180px; }
+#reader .col { padding-top: 88px; }
+
+.back-icon {
+  position: fixed;
+  top: calc(16px + env(safe-area-inset-top, 0px));
+  left: 16px;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+}
+.back-icon:hover { background: var(--rule); }
+.back-icon:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+h1 {
+  margin: 0 0 20px;
+  font-family: var(--display);
+  font-weight: 800;
+  font-stretch: 80%;
+  font-size: clamp(34px, 6vw, 52px);
+  line-height: 1;
+  letter-spacing: -.01em;
+  text-wrap: balance;
+}
+.byline {
+  margin: 0 0 36px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .06em;
+  color: var(--muted);
+}
+.txt p { margin: 0 0 22px; font-size: 19px; line-height: 1.6; }
+/* 글 위계: 제목 52 > 소제목 28 > 첫 문단 23 > 본문 19 > 날짜/기자 12 */
+.sub, #touch-body .ta-sub {
+  margin: 56px 0 18px;
+  font-family: var(--display);
+  font-weight: 800;
+  font-stretch: 82%;
+  font-size: 28px;
+  line-height: 1.1;
+  letter-spacing: -.005em;
+  text-wrap: balance;
+}
+.txt > p:first-child, #touch-body > p:first-child {
+  font-size: 23px;
+  line-height: 1.5;
+  margin-bottom: 28px;
+}
+
+/* ===== 블록: 글을 가리는 동안에는 단순한 회색 판 + 금지 문구 ===== */
+.slab {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 6px 10px;
+  background: var(--slab);
+  color: var(--ink);
+  text-align: center;
+  cursor: grab;
+  touch-action: none;           /* 폰에서 드래그할 때 화면 스크롤 막기 */
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background .15s, box-shadow .15s;
+}
+.slab:hover { background: var(--slab-hover); }
+.slab .tag {
+  position: relative;
+  z-index: 2;
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.slab:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.slab.lift { cursor: grabbing; box-shadow: 0 14px 30px rgba(0,0,0,.18); }
+
+/* 사진: 글을 가리는 동안에는 숨어 있음 */
+.slab img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity .45s ease;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+/* 글 밖으로 빠지면(revealed): 판이 사진으로 바뀜 */
+.slab.revealed {
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding: 0;
+  background: var(--ink);
+}
+.slab.revealed img { opacity: 1; }
+.slab.revealed .tag {
+  margin: 8px;
+  padding: 3px 6px;
+  background: var(--paper);
+  font-size: 10px;
+}
+
+/* 커지는 순간에만 크기와 위치가 부드럽게 바뀜 */
+.slab.growing { transition: width .45s ease, height .45s ease, left .45s ease, top .45s ease; }
+
+/* 사진 파일이 없을 때: 빈 테두리 */
+.slab.revealed.no-photo {
+  background: transparent;
+  outline: 1px solid var(--ink);
+  outline-offset: -1px;
+}
+
+/* ===== 엔딩 ===== */
+#end {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  padding: 24px 16px;
+  background: var(--ink);
+  color: var(--paper);
+}
+#end .in {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+#end p {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 800;
+  font-stretch: 78%;
+  font-size: clamp(28px, 5vw, 40px);
+  line-height: 1.02;
+  text-wrap: balance;
+}
+#end button {
+  padding: 10px 14px;
+  border: 1px solid var(--paper);
+  background: transparent;
+  color: var(--paper);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+#end button:focus-visible { outline: 2px solid var(--paper); outline-offset: 2px; }
+
+.fade { animation: fade .5s ease both; }
+@keyframes fade {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fade { animation: none; }
+  .slab, .slab img, .slab.growing { transition: none; }
+}

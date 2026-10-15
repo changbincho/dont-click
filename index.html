@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Don't Click</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Noto+Sans+Symbols+2&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- =========================================================
+     HOME: 클릭하면 울타리 기사로, 스크롤하면 점자 기사로
+     ========================================================= -->
+<div id="home">
+<div class="track" id="track">
+
+  <!-- 1. 첫 화면: 누르지 말라고 하지만, 화면 전체가 버튼 -->
+  <button id="gate" class="card" type="button" aria-label="Don't click. Clicking opens the first article.">
+    <div class="gate-top"><span>Access</span><span>Restricted area</span></div>
+    <div>
+      <h2 class="gate-word">Don't<br>click.</h2>
+      <p class="gate-sub">Nothing past this point is for you. Stay where you are.</p>
+    </div>
+    <div class="gate-bottom"><span aria-hidden="true">&darr;</span></div>
+  </button>
+
+  <!-- 2. 점자 기사: 클릭하지 않고 스크롤한 사람이 도착하는 곳
+       기사가 점자로만 찍혀 있음. 손가락(마우스)이 지나가는 단어만 잠깐 글자로 바뀜.
+       제목, 기자, 날짜, 소제목은 원문 그대로. 본문은 articles.js의 TOUCH_TEXT -->
+  <section id="touch" class="section card">
+    <div class="col">
+
+      <article id="touch-article" class="touch-article">
+        <p class="ta-kicker">NPR &middot; May 26, 2015</p>
+        <h2 class="ta-title braille-me">Do Touch The Artwork At Prado&rsquo;s Exhibit For The Blind</h2>
+        <p class="ta-byline">By Lauren Frayer</p>
+        <div id="touch-body"></div>
+      </article>
+
+      <p class="source">&ldquo;Do Touch The Artwork At Prado&rsquo;s Exhibit For The Blind&rdquo; by Lauren Frayer, NPR, May 26, 2015.
+        <a href="https://www.wlrn.org/2015-05-26/do-touch-the-artwork-at-prados-exhibit-for-the-blind" target="_blank" rel="noopener">Read the original</a></p>
+    </div>
+  </section>
+
+</div>
+</div>
+
+<!-- =========================================================
+     울타리 기사: DON'T CLICK을 누른 사람만 보는 화면
+     class="t" 가 붙은 요소가 '블록이 가리는 글'
+     ========================================================= -->
+<main id="reader" hidden>
+  <button id="back" class="back-icon" type="button" aria-label="Back">
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square"/></svg>
+  </button>
+
+  <article class="col" id="col">
+    <p class="kicker">Politics &middot; Sep 3, 2026 6:53 PM EDT</p>
+    <h1 class="t">Trump appointees advance plans for Lafayette Square fencing and White House gates</h1>
+    <p class="byline">By Bill Barrow, Associated Press</p>
+
+    <!-- 본문은 articles.js의 FENCE_TEXT에서 자동으로 채워짐 -->
+    <div class="txt" id="fence-body"></div>
+
+    <p class="source">Adapted from &ldquo;Trump appointees advance plans for Lafayette Square fencing and White House gates&rdquo; by Bill Barrow, Associated Press, via PBS News, Sept. 3, 2026.
+      <a href="https://www.pbs.org/newshour/politics/trump-appointees-advance-plans-for-lafayette-square-fencing-and-white-house-gates" target="_blank" rel="noopener">Read the original</a></p>
+  </article>
+</main>
+
+<!-- 엔딩: 블록이 전부 글에서 비켜나면 나타남 -->
+<div id="end" hidden>
+  <div class="in fade">
+    <p id="end-line">Nothing happened.<br>Nothing was ever going to.</p>
+    <button id="relock" type="button">Lock it again</button>
+  </div>
+</div>
+
+<script src="articles.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
